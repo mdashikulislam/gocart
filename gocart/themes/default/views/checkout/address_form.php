@@ -16,13 +16,11 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
-
 		//if we support placeholder text, remove all the labels
 		if(!supports_placeholder())
 		{
 			$('.placeholder').show();
 		}
-
 		<?php
 		// Restore previous selection, if we are on a validation page reload
 		$zone_id = set_value('zone_id');
@@ -30,7 +28,6 @@
 		echo "\$('#zone_id').val($zone_id);\n";
 		?>
 	});
-
 	function supports_placeholder()
 	{
 		return 'placeholder' in document.createElement('input');

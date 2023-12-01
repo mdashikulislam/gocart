@@ -82,8 +82,6 @@ class Checkout extends Front_Controller {
 		} else {
 			$this->form_validation->set_rules('zone_id', 'lang:address_state'); // will be empty
 		}
-
-
 		/*if there is post data, get the country info and see if the zip code is required*/
 		if($this->input->post('country_id'))
 		{
