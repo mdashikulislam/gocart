@@ -1,52 +1,6 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed'); ?>
 <div id="card-element"></div>
-<div id="stripe-details-form" style="display: none">
-	<div class="alert alert-error" id="stripe_error" style="display:none; width:auto; float:none;"></div>
-		
-	<div class="row-fluid">
-		<div class="span2">
-			Card Number
-		</div>
-		<div class="span6">
-			<input id="stripe_card_num" name="card_num" type="text" class="span12" value="" size="30" />
-		</div>
-		<div class="span4">
-			<?php echo theme_img('icon-cards.png', 'Cards We Accept');?>
-		</div>
-	</div>
-		
-		
-		
-	<div class="row-fluid">
-		<div class="span2">
-			Expiration Month/Year
-		</div>
-		<div class="span1">
-		<?php
-		
-		$months = array('01'=>'01','02'=>'02','03'=>'03','04'=>'04','05'=>'05','06'=>'06','07'=>'07','08'=>'08','09'=>'09','10'=>'10','11'=>'11','12'=>'12');
-		$y		= date('Y');
-		$x		= $y+20;
-		$years	= array();
-		while($y < $x)
-		{
-			$years[$y] = substr($y, strlen($y)-2, 2);
-			$y++;
-		}
-		echo form_dropdown('expiration_month', $months, '', 'id="stripe_expiration_month" class="span12"');
-		?>
-		</div>
-		<div class="span1">
-		<?php
-		echo form_dropdown('expiration_year', $years, '', 'id="stripe_expiration_year" class="span12"');
-		?>
-		</div>
-		<div class="span2 checkout-label">Card Security Code</div>
-		<input class="span2" name="cvc_code" type="text" class="pmt_required textfield input" id="stripe_cvc_code" maxlength="4" value="" />
-			
-	</div>
-</div>
-
+<input type="hidden" name="payment_method" value="Credit Card">
 <div id="stripe-loading" style="display:none; text-align:center;">
 	<img alt="loading" src="<?php echo theme_img('ajax-loader.gif');?>">
 </div>
@@ -54,12 +8,7 @@
 	<script type="text/javascript">
 	$(document).ready(function(){
 		alert($('#form-stripe_payments>input[type=submit]').attr('type'));
-		
-		// $('#form-stripe_payments>input[type=submit]').click(function(e){
-		// 	e.preventDefault();
-		// 	stripe_payments();
-		// 	return false;
-		// });
+
 	});
     var publishableKey;
     <?php if($stripe['mode'] == 'test'):?>
@@ -76,22 +25,51 @@
     form.addEventListener('submit', function(event) {
         event.preventDefault();
 
-        stripe.confirmCardPayment(
-            'pi_3OIXUaADOb5VKhoH1jTBXtQA_secret_68YXJ8SgulAcFaetrKc4t9n9M',
-            {
-                payment_method: {
-                    card: cardElement,
+        fetch('<?=base_url('stripe-payment-intent?amount='.$this->go_cart->total())?>', {
+            method: 'GET'
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (session) {
+                return stripe.confirmCardPayment(session.client_secret, {
+                    payment_method: {
+                        card: cardElement,
+                    },
+                });
+            })
+            .then(function (result) {
+                // Handle the result
+                if (result.error) {
+                    alert(result.error.message);
+                } else {
+
+                    $("#form-stripe_payments").html("<input id='stripeToken' type='hidden' name='stripeToken' value='" + result.paymentIntent.id + "'>");
+                    $('#form-stripe_payments').submit();
                 }
-            }
-        ).then(function(result) {
-            if (result.error) {
-                // Handle errors here
-                console.error(result.error);
-            } else {
-                // Payment successful, handle success here
-                console.log(result.paymentIntent);
-            }
-        });
+            })
+            .catch(function (error) {
+                console.error(error);
+            });
+
+
+
+
+        // stripe.confirmCardPayment(
+        //     'pi_3OIXUaADOb5VKhoH1jTBXtQA_secret_68YXJ8SgulAcFaetrKc4t9n9M',
+        //     {
+        //         payment_method: {
+        //             card: cardElement,
+        //         }
+        //     }
+        // ).then(function(result) {
+        //     if (result.error) {
+        //         // Handle errors here
+        //         console.error(result.error);
+        //     } else {
+        //         console.log(result.paymentIntent);
+        //     }
+        // });
 
 
 

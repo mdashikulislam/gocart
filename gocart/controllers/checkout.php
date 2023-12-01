@@ -286,7 +286,6 @@ class Checkout extends Front_Controller {
 	{
 		/* where to next? Shipping? */
 		$shipping_methods = $this->_get_shipping_methods();
-
 		if($shipping_methods)
 		{
 			$this->shipping_form($shipping_methods);
@@ -409,12 +408,13 @@ class Checkout extends Front_Controller {
 		Some error checking
 		see if we have the billing address
 		*/
+
 		$customer	= $this->go_cart->customer();
+
 		if(empty($customer['bill_address']))
 		{
 			redirect('checkout/step_1');
 		}
-
 		/* see if shipping is required and set. */
 		if(config_item('require_shipping') && $this->go_cart->requires_shipping() && $this->_get_shipping_methods())
 		{
@@ -425,7 +425,6 @@ class Checkout extends Front_Controller {
 				redirect('checkout/step_2');
 			}
 		}
-
 
 		if($payment_methods = $this->_get_payment_methods())
 		{
@@ -449,7 +448,6 @@ class Checkout extends Front_Controller {
 
 		/* pass in the payment methods */
 		$data['payment_methods']	= $payment_methods;
-		
 		/* require that a payment method is selected */
 		$this->form_validation->set_rules('module', 'lang:payment_method', 'trim|required|xss_clean|callback_check_payment');
 
@@ -517,6 +515,7 @@ class Checkout extends Front_Controller {
 
 	function step_4()
 	{
+        pp($data);
 		/* get addresses */
 		$data['customer']		= $this->go_cart->customer();
 
@@ -696,4 +695,32 @@ class Checkout extends Front_Controller {
 		/*  show final confirmation page */
 		$this->view('order_placed', $data);
 	}
+
+    public function stripe_payment_intent()
+    {
+        $amount = (int) $_GET['amount'] * 100;
+        $post = 'amount='.$amount.'&currency=usd&payment_method_types%5B%5D=card';
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.stripe.com/v1/payment_intents',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $post,
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: Bearer sk_test_51OIT3CADOb5VKhoH3vXHqfBXbwLzdaxDZ9zMjKBwN1d8KJDygPGEsSh76fiDfK5U27UFFYUtDOMCyWYKkrJUOWmA00CvFGL0HR',
+                'Content-Type: application/x-www-form-urlencoded'
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+        echo @$response;
+
+    }
 }
