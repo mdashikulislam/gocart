@@ -16,13 +16,13 @@
 
 <script type="text/javascript">
 	$(document).ready(function(){
-		
+
 		//if we support placeholder text, remove all the labels
 		if(!supports_placeholder())
 		{
 			$('.placeholder').show();
 		}
-		
+
 		<?php
 		// Restore previous selection, if we are on a validation page reload
 		$zone_id = set_value('zone_id');
@@ -30,7 +30,7 @@
 		echo "\$('#zone_id').val($zone_id);\n";
 		?>
 	});
-	
+
 	function supports_placeholder()
 	{
 		return 'placeholder' in document.createElement('input');
@@ -43,7 +43,7 @@
 $(document).ready(function() {
 	$('#country_id').change(function(){
 		populate_zone_menu();
-	});	
+	});
 
 });
 // context is ship or bill
@@ -56,7 +56,7 @@ function populate_zone_menu(value)
 </script>
 <?php /* Only show this javascript if the user is logged in */ ?>
 <?php if($this->Customer_model->is_logged_in(false, false)) : ?>
-<script type="text/javascript">	
+<script type="text/javascript">
 	<?php
 	$add_list = array();
 	foreach($customer_addresses as $row) {
@@ -66,17 +66,17 @@ function populate_zone_menu(value)
 	$add_list = json_encode($add_list);
 	echo "eval(addresses=$add_list);";
 	?>
-		
+
 	function populate_address(address_id)
 	{
 		if(address_id == '')
 		{
 			return;
 		}
-		
+
 		// - populate the fields
 		$.each(addresses[address_id], function(key, value){
-			
+
 			$('.address[name='+key+']').val(value);
 
 			// repopulate the zone menu and set the right value if we change the country
@@ -85,14 +85,14 @@ function populate_zone_menu(value)
 				zone_id = value;
 			}
 		});
-		
+
 		// repopulate the zone list, set the right value, then copy all to billing
 		$.post('<?php echo site_url('locations/get_zone_menu');?>',{id:$('#country_id').val()}, function(data) {
 			$('#zone_id').html(data);
 			$('#zone_id').val(zone_id);
-		});		
+		});
 	}
-	
+
 </script>
 <?php endif;?>
 
@@ -102,10 +102,14 @@ $countries = $this->Location_model->get_countries_menu();
 if(!empty($customer[$address_form_prefix.'_address']['country_id']))
 {
 	$zone_menu	= $this->Location_model->get_zones_menu($customer[$address_form_prefix.'_address']['country_id']);
+
 }
 else
 {
-	$zone_menu = array(''=>'')+$this->Location_model->get_zones_menu(array_shift(array_keys($countries)));
+    $keys = array_keys($countries);
+    $zoneMenu = array_shift($keys);
+
+	$zone_menu = array(''=>'')+$this->Location_model->get_zones_menu($zoneMenu);
 }
 
 //form elements
@@ -122,7 +126,7 @@ $zip		= array('placeholder'=>lang('address_zip'), 'maxlength'=>'10', 'class'=>'a
 
 
 ?>
-	
+
 	<?php
 	//post to the correct place.
 	echo ($address_form_prefix == 'bill')?form_open('checkout/step_1'):form_open('checkout/shipping_address');?>
@@ -141,7 +145,7 @@ $zip		= array('placeholder'=>lang('address_zip'), 'maxlength'=>'10', 'class'=>'a
 						<?php endif; ?>
 					</div>
 				</div>
-				
+
 				<div class="row">
 					<div class="span8">
 						<label class="placeholder"><?php echo lang('address_company');?></label>
@@ -183,7 +187,7 @@ $zip		= array('placeholder'=>lang('address_zip'), 'maxlength'=>'10', 'class'=>'a
 						<?php echo form_input($address1);?>
 					</div>
 				</div>
-				
+
 				<div class="row">
 					<div class="span8">
 						<label class="placeholder"><?php echo lang('address2');?></label>
@@ -198,7 +202,7 @@ $zip		= array('placeholder'=>lang('address_zip'), 'maxlength'=>'10', 'class'=>'a
 					</div>
 					<div class="span3">
 						<label class="placeholder"><?php echo lang('address_state');?><b class="r"> *</b></label>
-						<?php 
+						<?php
 							echo form_dropdown('zone_id',$zone_menu, @$customer[$address_form_prefix.'_address']['zone_id'], 'id="zone_id" class="address span3" ');?>
 					</div>
 					<div class="span2">

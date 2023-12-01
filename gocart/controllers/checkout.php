@@ -48,6 +48,7 @@ class Checkout extends Front_Controller {
 
 	function index()
 	{
+
 		/*show address first*/
 		$this->step_1();
 	}
@@ -81,8 +82,8 @@ class Checkout extends Front_Controller {
 		} else {
 			$this->form_validation->set_rules('zone_id', 'lang:address_state'); // will be empty
 		}
-		
-			
+
+
 		/*if there is post data, get the country info and see if the zip code is required*/
 		if($this->input->post('country_id'))
 		{
@@ -112,7 +113,6 @@ class Checkout extends Front_Controller {
 			} else {
 				$data['use_shipping'] = false;
 			}
-			
 			$this->view('checkout/address_form', $data);
 		}
 		else
