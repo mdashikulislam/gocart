@@ -410,7 +410,6 @@ class Checkout extends Front_Controller {
 		*/
 
 		$customer	= $this->go_cart->customer();
-
 		if(empty($customer['bill_address']))
 		{
 			redirect('checkout/step_1');
@@ -425,7 +424,6 @@ class Checkout extends Front_Controller {
 				redirect('checkout/step_2');
 			}
 		}
-
 		if($payment_methods = $this->_get_payment_methods())
 		{
 			$this->payment_form($payment_methods);
@@ -515,14 +513,12 @@ class Checkout extends Front_Controller {
 
 	function step_4()
 	{
-        pp($data);
 		/* get addresses */
 		$data['customer']		= $this->go_cart->customer();
 
 		$data['shipping_method']	= $this->go_cart->shipping_method();
 
 		$data['payment_method']		= $this->go_cart->payment_method();
-
 
 		/* Confirm the sale */
 		$this->view('checkout/confirm', $data);
@@ -539,19 +535,24 @@ class Checkout extends Front_Controller {
 	}
 
 	function place_order()
-	{		
+	{
+
+
+
+
 		// retrieve the payment method
 		$payment 			= $this->go_cart->payment_method();
 		$payment_methods	= $this->_get_payment_methods();
-		
+
 		//make sure they're logged in if the config file requires it
 		if($this->config->item('require_login'))
 		{
 			$this->Customer_model->is_logged_in();
 		}
-		
+
 		// are we processing an empty cart?
 		$contents = $this->go_cart->contents();
+
 		if(empty($contents))
 		{
 			redirect('cart/view_cart');
@@ -562,17 +563,21 @@ class Checkout extends Front_Controller {
 				redirect('checkout/step_3');
 			}
 		}
-		
 		if(!empty($payment) && (bool)$payment_methods == true)
 		{
 			//load the payment module
 			$this->load->add_package_path(APPPATH.'packages/payment/'.$payment['module'].'/');
 			$this->load->library($payment['module']);
-		
+//            if ($payment['module'] == 'stripe_payments'){
+//                $this->go_cart->set_payment_confirmed();
+//            }
+
 			// Is payment bypassed? (total is zero, or processed flag is set)
 			if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
 				//run the payment
-				$error_status	= $this->$payment['module']->process_payment();
+                $module = $payment['module'];
+
+				$error_status	= $this->$module->process_payment();
 				if($error_status !== false)
 				{
 					// send them back to the payment page with the error
@@ -600,9 +605,11 @@ class Checkout extends Front_Controller {
 		// run the complete payment module method once order has been saved
 		if(!empty($payment))
 		{
-			if(method_exists($this->$payment['module'], 'complete_payment'))
+
+            $module = $payment['module'];
+			if(method_exists($module, 'complete_payment'))
 			{
-				$this->$payment['module']->complete_payment($data);
+				$this->$module->complete_payment($data);
 			}
 		}
 	

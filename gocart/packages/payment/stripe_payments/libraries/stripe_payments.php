@@ -114,9 +114,10 @@ class stripe_payments
 	//payment processor
 	function process_payment()
 	{
-		require('stripe_lib.php');
+		//require('stripe_lib.php');
 		
 		$token		= $this->CI->session->userdata('stripe_token');
+
 		$settings	= $this->CI->Settings_model->get_settings('stripe');
 		if($settings['mode'] == 'test')
 		{
@@ -126,26 +127,40 @@ class stripe_payments
 		{
 			$key	= $settings['live_secret_key'];
 		}
-		$amount		= floatval($this->CI->go_cart->total())*100;
-		
-		$customer	= $this->CI->go_cart->customer();
-		
-		$description	= $customer['firstname'].' '.$customer['lastname'].' '.$customer['email'];
-		
-		Stripe::setApiKey($key);
-		
-		try {
-			$charge	= Stripe_Charge::create(array("amount"	=> $amount
-										,"currency"			=> 'usd'
-										,"card"				=> $token
-										,'description'		=> $description));
-			//we win!
-			$this->CI->session->set_userdata('stripe_id', $charge->id);
-			return false;
-		}
-		catch (Exception $e) {
-			return $e->getMessage();
-		}
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.stripe.com/v1/payment_intents/'.$token,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: Bearer '.$key
+            ),
+        ));
+
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        if ($response){
+            $newResponse = json_decode($response);
+
+            if ($newResponse->status == 'succeeded'){
+                $this->CI->session->set_userdata('stripe_id',$newResponse->latest_charge);
+                return false;
+            }else{
+                return 'Payment not complete';
+            }
+        }else{
+            return 'Payment not found';
+        }
+
 	}
 	
 	//admin end form and check functions
