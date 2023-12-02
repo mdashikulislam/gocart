@@ -705,6 +705,20 @@ class Checkout extends Front_Controller {
 
     public function stripe_payment_intent()
     {
+
+        $settings	= $this->Settings_model->get_settings('stripe');
+        if($settings['mode'] == 'test')
+        {
+            $key	= $settings['test_secret_key'];
+        }
+        else
+        {
+            $key	= $settings['live_secret_key'];
+        }
+
+
+
+
         $amount = (int) $_GET['amount'] * 100;
         $post = 'amount='.$amount.'&currency=usd&payment_method_types%5B%5D=card';
         $curl = curl_init();
@@ -719,7 +733,7 @@ class Checkout extends Front_Controller {
             CURLOPT_CUSTOMREQUEST => 'POST',
             CURLOPT_POSTFIELDS => $post,
             CURLOPT_HTTPHEADER => array(
-                'Authorization: Bearer sk_test_51OIT3CADOb5VKhoH3vXHqfBXbwLzdaxDZ9zMjKBwN1d8KJDygPGEsSh76fiDfK5U27UFFYUtDOMCyWYKkrJUOWmA00CvFGL0HR',
+                'Authorization: Bearer '.$key,
                 'Content-Type: application/x-www-form-urlencoded'
             ),
         ));
