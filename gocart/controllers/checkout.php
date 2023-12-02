@@ -536,10 +536,6 @@ class Checkout extends Front_Controller {
 
 	function place_order()
 	{
-
-
-
-
 		// retrieve the payment method
 		$payment 			= $this->go_cart->payment_method();
 		$payment_methods	= $this->_get_payment_methods();
@@ -705,7 +701,6 @@ class Checkout extends Front_Controller {
 
     public function stripe_payment_intent()
     {
-
         $settings	= $this->Settings_model->get_settings('stripe');
         if($settings['mode'] == 'test')
         {
@@ -716,11 +711,50 @@ class Checkout extends Front_Controller {
             $key	= $settings['live_secret_key'];
         }
 
+        $customer = $this->go_cart->customer();
+        $customerData= [
+            'email'=>$customer['email'],
+            'name'=>$customer['firstname'].' '.$customer['lastname'],
+            'phone'=>$customer['phone']
+        ];
 
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.stripe.com/v1/customers',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => http_build_query($customerData),
+            CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Bearer '.$key
+            ),
+        ));
+
+        $response = curl_exec($curl);
+        curl_close($curl);
+        $customerId = '';
+        if (!empty($response)){
+            $customerId = json_decode($response)->id;
+        }
+        //echo $response;
 
 
         $amount = (int) $_GET['amount'] * 100;
-        $post = 'amount='.$amount.'&currency=usd&payment_method_types%5B%5D=card';
+
+        $postValue = [
+            'amount'=>$amount,
+            'currency'=>'usd',
+            'payment_method_types[]'=>'card'
+        ];
+        if (!empty($customerId)){
+            $postValue['customer']=$customerId;
+        }
+
         $curl = curl_init();
         curl_setopt_array($curl, array(
             CURLOPT_URL => 'https://api.stripe.com/v1/payment_intents',
@@ -731,17 +765,16 @@ class Checkout extends Front_Controller {
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => $post,
+            CURLOPT_POSTFIELDS => http_build_query($postValue),
             CURLOPT_HTTPHEADER => array(
                 'Authorization: Bearer '.$key,
                 'Content-Type: application/x-www-form-urlencoded'
             ),
         ));
-
         $response = curl_exec($curl);
-
         curl_close($curl);
         echo @$response;
+
 
     }
 }

@@ -1140,7 +1140,9 @@ class go_cart {
 		}
 		//default status comes from the config file
 		$save['status'] = $this->CI->config->item('order_status');
-		
+        if (@$this->_cart_contents['payment']['module'] == 'stripe_payments'){
+            $save['status'] = 'Paid';
+        }
 		//if the id exists, then add it to the array $save array and remove it from the customer
 		if(isset($this->_cart_contents['customer']['id']) && $this->_cart_contents['customer']['id'] != '')
 		{
