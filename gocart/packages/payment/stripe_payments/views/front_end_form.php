@@ -26,7 +26,7 @@
     var form = document.getElementById('form-stripe_payments');
     form.addEventListener('submit', function(event) {
         event.preventDefault();
-
+        $('#stripe-loading').show();
         fetch('<?=base_url('stripe-payment-intent?amount='.$this->go_cart->total())?>', {
             method: 'GET'
         })
@@ -34,6 +34,7 @@
                 return response.json();
             })
             .then(function (session) {
+
                 return stripe.confirmCardPayment(session.client_secret, {
                     payment_method: {
                         card: cardElement,
@@ -45,7 +46,6 @@
                 if (result.error) {
                     alert(result.error.message);
                 } else {
-
                     $("#form-stripe_payments").html("<input id='stripeToken' type='hidden' name='stripeToken' value='" + result.paymentIntent.id + "'>");
                     $("#form-stripe_payments").append("<input id='module' type='hidden' name='module' value='stripe_payments'>");
                     $("#form-stripe_payments").append("<input id='description' type='hidden' name='description' value='Credit Card'>");
