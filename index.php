@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-include_once './vendor/autoload.php';
+//include_once './vendor/autoload.php';
 
 //set the session userdata if non-existant
 if(!isset($_SESSION['userdata']))
