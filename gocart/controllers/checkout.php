@@ -707,6 +707,7 @@ class Checkout extends Front_Controller {
         {
             $key	= $settings['live_secret_key'];
         }
+        $goCart	= $this->Settings_model->get_settings('gocart');
 
         $customer = $this->go_cart->customer();
         $customerData= [
@@ -738,14 +739,12 @@ class Checkout extends Front_Controller {
         if (!empty($response)){
             $customerId = json_decode($response)->id;
         }
-        //echo $response;
-
 
         $amount = (int) $_GET['amount'] * 100;
 
         $postValue = [
             'amount'=>$amount,
-            'currency'=>'usd',
+            'currency'=>strtolower($goCart['currency_iso']),
             'payment_method_types[]'=>'card'
         ];
         if (!empty($customerId)){
