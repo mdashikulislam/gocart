@@ -564,9 +564,6 @@ class Checkout extends Front_Controller {
 			//load the payment module
 			$this->load->add_package_path(APPPATH.'packages/payment/'.$payment['module'].'/');
 			$this->load->library($payment['module']);
-//            if ($payment['module'] == 'stripe_payments'){
-//                $this->go_cart->set_payment_confirmed();
-//            }
 
 			// Is payment bypassed? (total is zero, or processed flag is set)
 			if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
