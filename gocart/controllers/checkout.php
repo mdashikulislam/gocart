@@ -764,7 +764,6 @@ class Checkout extends Front_Controller {
             CURLOPT_POSTFIELDS => http_build_query($postValue),
             CURLOPT_HTTPHEADER => array(
                 'Authorization: Bearer '.$key,
-                "Stripe-Version: 2023-08-16",
                 'Content-Type: application/x-www-form-urlencoded'
             ),
         ));
