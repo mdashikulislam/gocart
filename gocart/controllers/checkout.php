@@ -745,7 +745,10 @@ class Checkout extends Front_Controller {
             'mode' => 'payment',
             'success_url' => base_url('st_gate/st_return?session_id={CHECKOUT_SESSION_ID}'),
             'cancel_url' => base_url('st_gate/st_cancel'),
-            'customer_email' => $customer['email']
+            'customer_email' => $customer['email'],
+            'payment_intent_data'=>[
+                'description'=>$customer['firstname'].' '.$customer['lastname'].' '.$customer['email']
+            ]
         ];
 
         $headers = [
