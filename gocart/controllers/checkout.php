@@ -407,6 +407,7 @@ class Checkout extends Front_Controller {
 
 	function step_3()
 	{
+
 		/*
 		Some error checking
 		see if we have the billing address
@@ -442,6 +443,7 @@ class Checkout extends Front_Controller {
 
 	protected function payment_form($payment_methods)
 	{
+
 		/* find out if we need to display the shipping */
 		$data['customer']			= $this->go_cart->customer();
 		$data['shipping_method']	= $this->go_cart->shipping_method();
@@ -451,7 +453,7 @@ class Checkout extends Front_Controller {
 
 		/* pass in the payment methods */
 		$data['payment_methods']	= $payment_methods;
-		
+
 		/* require that a payment method is selected */
 		$this->form_validation->set_rules('module', 'lang:payment_method', 'trim|required|xss_clean|callback_check_payment');
 
@@ -461,7 +463,6 @@ class Checkout extends Front_Controller {
 			$this->load->add_package_path(APPPATH.'packages/payment/'.$module.'/');
 			$this->load->library($module);
 		}
-
 		if($this->form_validation->run() == false)
 		{
 			$this->view('checkout/payment_form', $data);
@@ -546,7 +547,7 @@ class Checkout extends Front_Controller {
 		// retrieve the payment method
 		$payment 			= $this->go_cart->payment_method();
 		$payment_methods	= $this->_get_payment_methods();
-		
+
 		//make sure they're logged in if the config file requires it
 		if($this->config->item('require_login'))
 		{
@@ -555,6 +556,7 @@ class Checkout extends Front_Controller {
 		
 		// are we processing an empty cart?
 		$contents = $this->go_cart->contents();
+
 		if(empty($contents))
 		{
 			redirect('cart/view_cart');
@@ -565,17 +567,23 @@ class Checkout extends Front_Controller {
 				redirect('checkout/step_3');
 			}
 		}
-		
+
 		if(!empty($payment) && (bool)$payment_methods == true)
 		{
 			//load the payment module
 			$this->load->add_package_path(APPPATH.'packages/payment/'.$payment['module'].'/');
 			$this->load->library($payment['module']);
-		
+
 			// Is payment bypassed? (total is zero, or processed flag is set)
 			if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
 				//run the payment
-				$error_status	= $this->$payment['module']->process_payment();
+                $module = $payment['module'];
+                if ($module != 'stripe_payments'){
+                    $error_status	= $this->$module->process_payment();
+                }else{
+                    $error_status = $this->stripe_process_payment();
+                }
+
 				if($error_status !== false)
 				{
 					// send them back to the payment page with the error
@@ -698,4 +706,67 @@ class Checkout extends Front_Controller {
 		/*  show final confirmation page */
 		$this->view('order_placed', $data);
 	}
+
+    public function stripe_process_payment()
+    {
+        $process	= false;
+        $settings	= $this->Settings_model->get_settings('stripe');
+        if($settings['mode'] == 'test')
+        {
+            $key	= $settings['test_secret_key'];
+        }
+        else
+        {
+            $key	= $settings['live_secret_key'];
+        }
+        $customer = $this->go_cart->customer();
+        $total = $this->go_cart->total();
+        $goSetting = $this->Settings_model->get_settings('gocart');
+        $endpoint = 'https://api.stripe.com/v1/checkout/sessions';
+        $content = '';
+        $i = 1;
+        foreach ($this->go_cart->contents() as $key =>  $pData){
+            $content .= ($i).'.'.$pData['name'].' => '.$pData['quantity'].' * '.$pData['price'].' = '.$pData['subtotal'].' ';
+            $i++;
+        }
+        $data = [
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'product_data' => [
+                        'name' => $content,
+                    ],
+                    'currency' => $goSetting['currency_iso'],
+                    'unit_amount' => $total * 100,
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => 'http://localhost/GoCart/success?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => 'http://localhost/GoCart/cancel',
+            'customer_email' => $customer['email'],
+        ];
+
+        $headers = [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Authorization: Bearer ' . $key,
+        ];
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $endpoint);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'Error: ' . curl_error($ch);
+        }
+
+        curl_close($ch);
+        $sessionData = json_decode($response, true);
+        pp($sessionData);
+    }
 }

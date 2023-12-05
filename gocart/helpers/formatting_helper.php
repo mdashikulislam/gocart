@@ -42,3 +42,10 @@ function format_currency($value, $symbol=true)
 	$fmt = numfmt_create( config_item('locale'), NumberFormatter::CURRENCY );
 	return numfmt_format_currency($fmt, $value, config_item('currency_iso'));
 }
+function pp($data)
+{
+    echo '<pre style="padding:10px;">';
+    print_r($data);
+    echo '</pre>';
+    exit();
+}
