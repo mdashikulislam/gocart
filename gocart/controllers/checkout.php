@@ -611,9 +611,10 @@ class Checkout extends Front_Controller {
 		// run the complete payment module method once order has been saved
 		if(!empty($payment))
 		{
-			if(method_exists($this->$payment['module'], 'complete_payment'))
+            $module = $payment['module'];
+			if(method_exists($this->$module, 'complete_payment'))
 			{
-				$this->$payment['module']->complete_payment($data);
+				$this->$module->complete_payment($data);
 			}
 		}
 	
@@ -725,7 +726,7 @@ class Checkout extends Front_Controller {
         $endpoint = 'https://api.stripe.com/v1/checkout/sessions';
         $content = '';
         $i = 1;
-        foreach ($this->go_cart->contents() as $key =>  $pData){
+        foreach ($this->go_cart->contents() as   $pData){
             $content .= ($i).'.'.$pData['name'].' => '.$pData['quantity'].' * '.$pData['price'].' = '.$pData['subtotal'].' ';
             $i++;
         }
@@ -742,14 +743,15 @@ class Checkout extends Front_Controller {
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => 'http://localhost/GoCart/success?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => 'http://localhost/GoCart/cancel',
-            'customer_email' => $customer['email'],
+            'success_url' => 'http://localhost/GoCart/st_gate/st_return?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => 'http://localhost/GoCart/st_gate/st_cancel',
+            'customer_email' => $customer['email']
         ];
 
         $headers = [
             'Content-Type: application/x-www-form-urlencoded',
-            'Authorization: Bearer ' . $key,
+            'Authorization: Bearer '.$key,
+            'Stripe-Version: 2023-10-16'
         ];
         $ch = curl_init();
 
@@ -767,6 +769,10 @@ class Checkout extends Front_Controller {
 
         curl_close($ch);
         $sessionData = json_decode($response, true);
-        pp($sessionData);
+        if (@$sessionData['url']){
+            header('Location: '.$sessionData['url']);
+            die();
+        }
+         return 'There was an error processing your payment through Stripe';
     }
 }

@@ -41,7 +41,7 @@ class stripe_payments
 	}
 	function checkout_check()
 	{
-
+        return false;
 		$token	= $_POST['stripeToken'];
 		$error	= false;
 		if(empty($token))

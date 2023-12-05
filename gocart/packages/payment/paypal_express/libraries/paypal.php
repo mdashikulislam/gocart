@@ -143,7 +143,7 @@ class PayPal {
 		'DESC'=> $desc,
 		'NOSHIPPING'=> "1",
 		'ALLOWNOTE'=> "1",
-		'CURRENCYCODE'=> $this->currency,
+		'CURRENCYCODE'=> strtolower($this->currency),
 		'METHOD' => 'SetExpressCheckout');
 
 		$data['CUSTOM'] = $amount.'|'.$this->currency.'|'.$invoice;
@@ -192,7 +192,7 @@ class PayPal {
 		'PAYERID' => $payer,
 		'TOKEN' =>$token,
 		'AMT' => $amount,
-		'CURRENCYCODE'=>$currency,
+		'CURRENCYCODE'=>strtolower($currency),
 		'METHOD' =>'DoExpressCheckoutPayment');
 		$query = $this->buildQuery($data);
 
