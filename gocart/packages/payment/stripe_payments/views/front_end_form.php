@@ -1,6 +1,6 @@
 <table width="100%" border="0" cellpadding="5">
     <tr>
-        <td><img  src="https://www.paypal.com/en_US/i/logo/PayPal_mark_180x113.gif" border="0" alt="Acceptance Mark"></td>
+        <td><img style="width: 180px"  src="https://i.ibb.co/yh0vPSD/stripe-icon-23-1.png" border="0" alt="Acceptance Mark"></td>
     </tr>
     <tr>
         <td>
