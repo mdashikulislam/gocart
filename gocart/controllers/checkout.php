@@ -743,8 +743,8 @@ class Checkout extends Front_Controller {
                 'quantity' => 1,
             ]],
             'mode' => 'payment',
-            'success_url' => 'http://localhost/GoCart/st_gate/st_return?session_id={CHECKOUT_SESSION_ID}',
-            'cancel_url' => 'http://localhost/GoCart/st_gate/st_cancel',
+            'success_url' => base_url('st_gate/st_return?session_id={CHECKOUT_SESSION_ID}'),
+            'cancel_url' => base_url('st_gate/st_cancel'),
             'customer_email' => $customer['email']
         ];
 
