@@ -662,7 +662,7 @@ class Checkout extends Front_Controller {
 			}
 		}
 			
-
+        pp();
 		
 		$data['order_id']			= $this->go_cart->get_order();
 		$data['shipping']			= $this->go_cart->shipping_method();
@@ -670,9 +670,10 @@ class Checkout extends Front_Controller {
 		$data['customer']			= $this->go_cart->customer();
 		$data['shipping_notes']		= $this->go_cart->get_additional_detail('shipping_notes');
 		$data['referral']			= $this->go_cart->get_additional_detail('referral');
-		
 		$order_downloads 			= $this->go_cart->get_order_downloads();
-		
+
+
+
 		$data['hide_menu']			= true;
 
 		// run the complete payment module method once order has been saved
