@@ -525,7 +525,7 @@ class Checkout extends Front_Controller {
     }
 
 
-	function step_4()
+	function step_4_old()
 	{
 		/* get addresses */
 		$data['customer']		= $this->go_cart->customer();
@@ -549,6 +549,21 @@ class Checkout extends Front_Controller {
 		$this->Customer_model->is_logged_in('checkout', 'secure/register');
 	}
 
+    public function step_4()
+    {
+        $payment_methods	= $this->_get_payment_methods();
+        if($this->config->item('require_login'))
+        {
+            $this->Customer_model->is_logged_in();
+        }
+        $contents = $this->go_cart->contents();
+        if(empty($contents))
+        {
+            redirect('cart/view_cart');
+        }
+         $this->go_cart->save_order();
+
+    }
 	function place_order()
 	{		
 		// retrieve the payment method

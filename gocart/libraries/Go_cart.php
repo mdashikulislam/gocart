@@ -1306,7 +1306,7 @@ class go_cart {
 			$this->CI->Coupon_model->touch_coupon($this->_cart_contents['whole_order_discount_cp']);
 		}
 		
-		
+		$this->CI->session->set_userdata('order_id',$order_id);
 		
 		return $order_id;
 	}
@@ -1530,4 +1530,7 @@ class go_cart {
 		// save the updated cart to our session
 		$this->_save_cart(false);
 	}
+    function get_order(){
+        return $this->CI->session->userdata('order_id');
+    }
 }

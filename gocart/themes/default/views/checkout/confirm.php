@@ -7,6 +7,6 @@
 
 <div class="row">
 	<div class="span12">
-		<a class="btn btn-primary btn-large btn-block" href="<?php echo site_url('checkout/place_order');?>"><?php echo lang('submit_order');?></a>
+		<a class="btn btn-primary btn-large btn-block" href="<?php echo site_url('checkout/step_4');?>"><?php echo lang('submit_order');?></a>
 	</div>
 </div>
