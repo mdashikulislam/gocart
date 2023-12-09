@@ -674,7 +674,7 @@ class Checkout extends Front_Controller {
 		$order_downloads 			= $this->go_cart->get_order_downloads();
 		
 		$data['hide_menu']			= true;
-		
+
 		// run the complete payment module method once order has been saved
 		if(!empty($payment))
 		{
@@ -684,7 +684,6 @@ class Checkout extends Front_Controller {
 				$this->$module->complete_payment($data);
 			}
 		}
-	
 		// Send the user a confirmation email
 		
 		// - get the email template
