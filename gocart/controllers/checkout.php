@@ -456,7 +456,6 @@ class Checkout extends Front_Controller {
 
 		/* require that a payment method is selected */
 		$this->form_validation->set_rules('module', 'lang:payment_method', 'trim|required|xss_clean|callback_check_payment');
-
 		$module = $this->input->post('module');
 		if($module)
 		{
@@ -469,7 +468,6 @@ class Checkout extends Front_Controller {
 		}
 		else
 		{
-			$this->go_cart->set_payment( $module, $this->$module->description() );
 			redirect('checkout/step_4');
 		}
 	}
@@ -534,10 +532,56 @@ class Checkout extends Front_Controller {
 
 		$data['payment_method']		= $this->go_cart->payment_method();
 
-
 		/* Confirm the sale */
 		$this->view('checkout/confirm', $data);
 	}
+    function payment(){
+        $module = $this->input->post('module');
+        if($module)
+        {
+            $this->load->add_package_path(APPPATH.'packages/payment/'.$module.'/');
+            $this->load->library($module);
+        }
+        $this->go_cart->set_payment( $module, $this->$module->description());
+        $payment 			= $this->go_cart->payment_method();
+        $payment_methods	= $this->_get_payment_methods();
+        if($this->config->item('require_login'))
+        {
+            $this->Customer_model->is_logged_in();
+        }
+        $contents = $this->go_cart->contents();
+        if(empty($contents))
+        {
+            redirect('cart/view_cart');
+        }
+        if(!empty($payment) && (bool)$payment_methods == true)
+        {
+            //load the payment module
+            $this->load->add_package_path(APPPATH.'packages/payment/'.$payment['module'].'/');
+            $this->load->library($payment['module']);
+
+            // Is payment bypassed? (total is zero, or processed flag is set)
+            if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
+                //run the payment
+                $module = $payment['module'];
+
+                if ($module != 'stripe_payments'){
+                    $error_status	= $this->$module->process_payment();
+                }else{
+                    $error_status = $this->stripe_process_payment();
+                }
+                if($error_status !== false)
+                {
+                    // send them back to the payment page with the error
+                    $this->session->set_flashdata('error', $error_status);
+                    redirect('checkout/step_3');
+                }
+            }
+        }
+
+
+
+    }
 
 	function login()
 	{
@@ -563,6 +607,10 @@ class Checkout extends Front_Controller {
         }
          $this->go_cart->save_order();
 
+        if($payment_methods = $this->_get_payment_methods())
+        {
+            $this->payment_form($payment_methods);
+        }
     }
 	function place_order()
 	{		
