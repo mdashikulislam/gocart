@@ -594,7 +594,6 @@ class Checkout extends Front_Controller {
 
     public function step_4()
     {
-        $payment_methods	= $this->_get_payment_methods();
         if($this->config->item('require_login'))
         {
             $this->Customer_model->is_logged_in();
@@ -609,6 +608,8 @@ class Checkout extends Front_Controller {
         if($payment_methods = $this->_get_payment_methods())
         {
             $this->payment_form($payment_methods);
+        }else{
+            die('exit');
         }
     }
 	function place_order()
@@ -642,7 +643,6 @@ class Checkout extends Front_Controller {
 			//load the payment module
 			$this->load->add_package_path(APPPATH.'packages/payment/'.$payment['module'].'/');
 			$this->load->library($payment['module']);
-
 			// Is payment bypassed? (total is zero, or processed flag is set)
 			if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
 				//run the payment
@@ -652,7 +652,6 @@ class Checkout extends Front_Controller {
                 }else{
                     $error_status = $this->stripe_process_payment();
                 }
-
 				if($error_status !== false)
 				{
 					// send them back to the payment page with the error
@@ -661,10 +660,12 @@ class Checkout extends Front_Controller {
 				}
 			}
 		}
-			
-        pp();
+		$orderId = 	$this->go_cart->get_order();
+        if (@$payment['confirmed']){
+            $this->Order_model->payment_update($orderId);
+        }
 		
-		$data['order_id']			= $this->go_cart->get_order();
+		$data['order_id']			= $orderId;
 		$data['shipping']			= $this->go_cart->shipping_method();
 		$data['payment']			= $this->go_cart->payment_method();
 		$data['customer']			= $this->go_cart->customer();

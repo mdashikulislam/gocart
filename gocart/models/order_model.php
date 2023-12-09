@@ -256,7 +256,11 @@ Class order_model extends CI_Model
 		return $order_number;
 
 	}
-	
+	function payment_update($orderId){
+        //update the order with this order id
+        $this->db->where('order_number', $orderId);
+        $this->db->update('orders', ['status'=>'Paid']);
+    }
 	function get_best_sellers($start, $end)
 	{
 		if(!empty($start))
