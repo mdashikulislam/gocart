@@ -288,7 +288,6 @@ class Checkout extends Front_Controller {
 	{
 		/* where to next? Shipping? */
 		$shipping_methods = $this->_get_shipping_methods();
-
 		if($shipping_methods)
 		{
 			$this->shipping_form($shipping_methods);
@@ -405,7 +404,7 @@ class Checkout extends Front_Controller {
 		}
 	}
 
-	function step_3()
+	function step_3_old()
 	{
 
 		/*
@@ -428,6 +427,7 @@ class Checkout extends Front_Controller {
 				redirect('checkout/step_2');
 			}
 		}
+
 
 
 		if($payment_methods = $this->_get_payment_methods())
@@ -517,6 +517,13 @@ class Checkout extends Front_Controller {
 			return false;
 		}
 	}
+
+    function step_3(){
+        $data['customer']		= $this->go_cart->customer();
+        $data['shipping_method']	= $this->go_cart->shipping_method();
+        $this->view('checkout/confirm', $data);
+    }
+
 
 	function step_4()
 	{

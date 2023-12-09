@@ -105,7 +105,8 @@ if(!empty($customer[$address_form_prefix.'_address']['country_id']))
 }
 else
 {
-	$zone_menu = array(''=>'')+$this->Location_model->get_zones_menu(array_shift(array_keys($countries)));
+    $array = array_keys($countries);
+    $zone_menu = array(''=>'')+$this->Location_model->get_zones_menu(array_shift($array));
 }
 
 //form elements
