@@ -46,26 +46,19 @@ class st_gate extends Front_Controller {
         }
 
         $endpoint = 'https://api.stripe.com/v1/checkout/sessions/' . $sessionId;
-
         $headers = [
             'Authorization: Bearer ' . $key,
             'Stripe-Version: 2023-10-16'
         ];
-
         $ch = curl_init();
-
         curl_setopt($ch, CURLOPT_URL, $endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
         $response = curl_exec($ch);
-
         if (curl_errno($ch)) {
             echo 'Error: ' . curl_error($ch);
         }
-
         curl_close($ch);
-
         return json_decode($response, true);
     }
     function st_cancel()

@@ -564,7 +564,6 @@ class Checkout extends Front_Controller {
             if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
                 //run the payment
                 $module = $payment['module'];
-
                 if ($module != 'stripe_payments'){
                     $error_status	= $this->$module->process_payment();
                 }else{
@@ -663,11 +662,9 @@ class Checkout extends Front_Controller {
 			}
 		}
 			
+
 		
-		// save the order
-		$order_id = $this->go_cart->save_order();
-		
-		$data['order_id']			= $order_id;
+		$data['order_id']			= $this->go_cart->get_order();
 		$data['shipping']			= $this->go_cart->shipping_method();
 		$data['payment']			= $this->go_cart->payment_method();
 		$data['customer']			= $this->go_cart->customer();
@@ -782,30 +779,21 @@ class Checkout extends Front_Controller {
     {
         $process	= false;
         $settings	= $this->Settings_model->get_settings('stripe');
-        if($settings['mode'] == 'test')
-        {
+        if($settings['mode'] == 'test') {
             $key	= $settings['test_secret_key'];
-        }
-        else
-        {
+        }else{
             $key	= $settings['live_secret_key'];
         }
         $customer = $this->go_cart->customer();
         $total = $this->go_cart->total();
         $goSetting = $this->Settings_model->get_settings('gocart');
         $endpoint = 'https://api.stripe.com/v1/checkout/sessions';
-        $content = '';
-        $i = 1;
-        foreach ($this->go_cart->contents() as   $pData){
-            $content .= ($i).'.'.$pData['name'].' => '.$pData['quantity'].' * '.$pData['price'].' = '.$pData['subtotal'].' ';
-            $i++;
-        }
         $data = [
             'payment_method_types' => ['card'],
             'line_items' => [[
                 'price_data' => [
                     'product_data' => [
-                        'name' => $content,
+                        'name' => 'Order:'.$this->go_cart->get_order(),
                     ],
                     'currency' => $goSetting['currency_iso'],
                     'unit_amount' => $total * 100,
@@ -817,7 +805,7 @@ class Checkout extends Front_Controller {
             'cancel_url' => base_url('st_gate/st_cancel'),
             'customer_email' => $customer['email'],
             'payment_intent_data'=>[
-                'description'=>$customer['firstname'].' '.$customer['lastname'].' '.$customer['email']
+                'description'=>'Order:'.$this->go_cart->get_order().' - '.$customer['firstname'].' '.$customer['lastname'].' '.$customer['email']
             ]
         ];
 
@@ -826,8 +814,8 @@ class Checkout extends Front_Controller {
             'Authorization: Bearer '.$key,
             'Stripe-Version: 2023-10-16'
         ];
-        $ch = curl_init();
 
+        $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
