@@ -787,9 +787,8 @@ class Checkout extends Front_Controller
             'cancel_url' => base_url('st_gate/st_cancel'),
             'customer_email' => $customer['email'],
             'payment_intent_data' => [
-                'description' => 'Order:' . $this->go_cart->get_order() . ' - ' . $customer['firstname'] . ' ' . $customer['lastname'] . ' ' . $customer['email']
-            ],
-            'shipping_address_collection'=>'required'
+                'description' =>  $this->go_cart->get_order() . ' - ' . $customer['firstname'] . ' ' . $customer['lastname'] . ' ' . $customer['email']
+            ]
         ];
 
         $headers = [
