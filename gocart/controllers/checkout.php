@@ -709,13 +709,18 @@ class Checkout extends Front_Controller
         $total = $this->go_cart->total();
         $goSetting = $this->Settings_model->get_settings('gocart');
 
+        $customerInfo = [
+            'first_name' => 'Md Ashikul',
+            'last_name' => 'islam',
+            'email' => 'ashik.nwu@gmail.com',
+        ];
+
         $ch = curl_init();
         $paypalUrl = 'https://api.sandbox.paypal.com/v2/checkout/orders';
         $headers = [
             'Content-Type: application/json',
             'PayPal-Request-Id:'.time()
         ];
-
         $data = [
             'intent' => 'CAPTURE',
             'purchase_units' => [
@@ -730,6 +735,8 @@ class Checkout extends Front_Controller
                 'return_url' => base_url('paypal/success'), // Replace with your actual success URL
                 'cancel_url' => base_url('paypal/cancel'),   // Replace with your actual cancel URL
             ],
+            'invoice_id' => $this->go_cart->get_order(),
+            'customer_info'=>$customerInfo
         ];
 
         curl_setopt($ch, CURLOPT_URL, $paypalUrl);

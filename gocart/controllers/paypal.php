@@ -14,7 +14,6 @@ class paypal extends Front_Controller
         $payer = $this->input->get('PayerID');
         $settings = $this->Settings_model->get_settings('paypal_express');
         $paypalAuth = $settings['username'].':'.$settings['password'];
-
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
@@ -54,7 +53,15 @@ class paypal extends Front_Controller
 
     public function cancel()
     {
+        if($this->config->item('require_login'))
+        {
+            $this->Customer_model->is_logged_in();
+        }
 
+        // User canceled using paypal, send them back to the payment page
+        $cart  = $this->session->userdata('cart');
+        $this->session->set_flashdata('message', "<div>paypal transaction canceled, select another payment method</div>");
+        redirect('checkout');
     }
 
     function tokenUpdate()
