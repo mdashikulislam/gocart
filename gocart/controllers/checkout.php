@@ -710,9 +710,9 @@ class Checkout extends Front_Controller
         $goSetting = $this->Settings_model->get_settings('gocart');
 
         $customerInfo = [
-            'first_name' => 'Md Ashikul',
-            'last_name' => 'islam',
-            'email' => 'ashik.nwu@gmail.com',
+            'first_name' => $customer['firstname'],
+            'last_name' => $customer['lastname'],
+            'email' => $customer['email'],
         ];
 
         $ch = curl_init();
