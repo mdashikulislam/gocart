@@ -357,36 +357,6 @@ class Checkout extends Front_Controller
         }
     }
 
-    function step_3_old()
-    {
-
-        /*
-        Some error checking
-        see if we have the billing address
-        */
-        $customer = $this->go_cart->customer();
-        if (empty($customer['bill_address'])) {
-            redirect('checkout/step_1');
-        }
-
-        /* see if shipping is required and set. */
-        if (config_item('require_shipping') && $this->go_cart->requires_shipping() && $this->_get_shipping_methods()) {
-            $code = $this->validate_shipping_option($this->go_cart->shipping_code());
-
-            if (!$code) {
-                redirect('checkout/step_2');
-            }
-        }
-
-
-        if ($payment_methods = $this->_get_payment_methods()) {
-            $this->payment_form($payment_methods);
-        } /* now where? continue to step 4 */
-        else {
-            $this->step_4();
-        }
-    }
-
     protected function payment_form($payment_methods)
     {
 
@@ -453,20 +423,6 @@ class Checkout extends Front_Controller
     {
         $data['customer'] = $this->go_cart->customer();
         $data['shipping_method'] = $this->go_cart->shipping_method();
-        $this->view('checkout/confirm', $data);
-    }
-
-
-    function step_4_old()
-    {
-        /* get addresses */
-        $data['customer'] = $this->go_cart->customer();
-
-        $data['shipping_method'] = $this->go_cart->shipping_method();
-
-        $data['payment_method'] = $this->go_cart->payment_method();
-
-        /* Confirm the sale */
         $this->view('checkout/confirm', $data);
     }
 
