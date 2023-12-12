@@ -205,7 +205,11 @@ Class order_model extends CI_Model
 		$this->db->where('order_id', $id);
 		$this->db->delete('order_items');
 	}
-	
+
+    public function last_order_id()
+    {
+        return $this->db->get('orders')->row()->id;
+	}
 	function save_order($data, $contents = false)
 	{
 		if (isset($data['id']))
@@ -224,8 +228,15 @@ Class order_model extends CI_Model
 			
 			//create a unique order number
 			//unix time stamp + unique id of the order just submitted.
-			$order	= array('order_number'=> date('U').$id);
-			
+
+            $payment = $this->go_cart->payment_method();
+            $module = @$payment['module'];
+            if (isset($module) && $module == 'paypal_express'){
+                $order	= array('order_number'=> $this->session->userdata('paypal_temp_order'));
+            }else{
+                $order	= array('order_number'=> date('U').$id);
+            }
+
 			//update the order with this order id
 			$this->db->where('id', $id);
 			$this->db->update('orders', $order);

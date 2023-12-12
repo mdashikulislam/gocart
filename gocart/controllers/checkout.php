@@ -715,8 +715,12 @@ class Checkout extends Front_Controller {
 
     public function updateOrderInfoOnPaymenetgeteway($orderId,$module)
     {
-        $settings	= $this->Settings_model->get_settings('stripe');
+        if (! in_array($module,['stripe_payments'])){
+            return  true;
+        }
+        $pi = $this->session->userdata('payment_id');
         if ($module == 'stripe_payments'){
+            $settings	= $this->Settings_model->get_settings('stripe');
             if($settings['mode'] == 'test')
             {
                 $key	= $settings['test_secret_key'];
@@ -727,7 +731,7 @@ class Checkout extends Front_Controller {
             }
             $customer = $this->go_cart->customer();
             $goSetting = $this->Settings_model->get_settings('gocart');
-            $pi = $this->session->userdata('payment_id');
+
             $endpoint = 'https://api.stripe.com/v1/payment_intents/'.$pi;
 
             $data = [
@@ -827,14 +831,12 @@ class Checkout extends Front_Controller {
 
         $process = false;
         $settings = $this->Settings_model->get_settings('paypal_express');
-        $clientId = '';
-        $clientSecret = '';
+        $clientId = $settings['username'];
+        $clientSecret = $settings['password'];
         if ($settings['SANDBOX'] == '1') {
-            $clientId = $settings['username'];
-            $clientSecret = $settings['password'];
+            $base = 'https://api.sandbox.paypal.com';
         } else {
-            $clientId = $settings['username'];
-            $clientSecret = $settings['password'];
+            $base = 'https://api.paypal.com';
         }
         $customer = $this->go_cart->customer();
         $total = $this->go_cart->total();
@@ -847,15 +849,19 @@ class Checkout extends Front_Controller {
         ];
 
         $ch = curl_init();
-        $paypalUrl = 'https://api.sandbox.paypal.com/v2/checkout/orders';
+        $paypalUrl = $base.'/v2/checkout/orders';
         $headers = [
             'Content-Type: application/json',
             'PayPal-Request-Id:'.time()
         ];
+        $lastOrder = $this->Order_model->last_order_id() + 1;
+        $tempOrder = time().$lastOrder;
+        $this->session->set_userdata('paypal_temp_order',$tempOrder);
         $data = [
             'intent' => 'CAPTURE',
             'purchase_units' => [
                 [
+                    'invoice_id'=>$tempOrder,
                     'amount' => [
                         'currency_code' => $goSetting['currency_iso'],
                         'value' => $total,

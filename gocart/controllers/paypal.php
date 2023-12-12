@@ -9,16 +9,22 @@ class paypal extends Front_Controller
     }
 
 
+
     public function success()
     {
         $token = $this->input->get('token');
         $payer = $this->input->get('PayerID');
         $settings = $this->Settings_model->get_settings('paypal_express');
         $paypalAuth = $settings['username'].':'.$settings['password'];
+        if ($settings['SANDBOX'] == '1') {
+            $base = 'https://api.sandbox.paypal.com';
+        } else {
+            $base = 'https://api.paypal.com';
+        }
         try {
             $curl = curl_init();
             curl_setopt_array($curl, array(
-                CURLOPT_URL => 'https://api.sandbox.paypal.com/v2/checkout/orders/'.$token.'/capture',
+                CURLOPT_URL => $base.'/v2/checkout/orders/'.$token.'/capture',
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
