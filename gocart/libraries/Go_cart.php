@@ -1119,6 +1119,7 @@ class go_cart {
 		// save cart - no recalculation necessary
 		$this->_save_cart(false);
 	}
+
 	
 	// This saves the confirmed order 
 	function save_order() {
@@ -1196,7 +1197,10 @@ class go_cart {
 		$save['coupon_discount']	= $this->_cart_contents['coupon_discount'];
 		$save['subtotal']			= $this->_cart_contents['cart_subtotal'];
 		$save['total']				= $this->_cart_contents['cart_total'];
-		
+		if (!empty($this->_cart_contents['payment']['confirmed'])){
+            $save['status'] = 'Paid';
+        }
+
 		//store the payment info
 		//it's up to the payment method to remove any sensitive data from the array before this time
 		if(!empty($this->_cart_contents['payment']['description']))
