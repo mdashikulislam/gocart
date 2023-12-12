@@ -18,7 +18,7 @@ class st_gate extends Front_Controller {
         // Process the results
         if ($final['payment_status'] == 'paid') {
             // The transaction is good. Finish order
-
+            $this->session->set_userdata('payment_id',$final['payment_intent']);
             // set a confirmed flag in the gocart payment property
             $this->go_cart->set_payment_confirmed();
 
@@ -32,6 +32,7 @@ class st_gate extends Front_Controller {
             redirect('checkout');
         }
     }
+
 
     public function checkoutDetails($sessionId)
     {
@@ -65,7 +66,6 @@ class st_gate extends Front_Controller {
         }
 
         curl_close($ch);
-
         return json_decode($response, true);
     }
     function st_cancel()

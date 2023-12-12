@@ -547,7 +547,7 @@ class Checkout extends Front_Controller {
 		// retrieve the payment method
 		$payment 			= $this->go_cart->payment_method();
 		$payment_methods	= $this->_get_payment_methods();
-
+        $module = $payment['module'];
 		//make sure they're logged in if the config file requires it
 		if($this->config->item('require_login'))
 		{
@@ -577,7 +577,6 @@ class Checkout extends Front_Controller {
 			// Is payment bypassed? (total is zero, or processed flag is set)
 			if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
 				//run the payment
-                $module = $payment['module'];
 
                 if (in_array($module,['stripe_payments','paypal_express'])){
                     if ($module == 'stripe_payments'){
@@ -588,15 +587,6 @@ class Checkout extends Front_Controller {
                     }
                 }else{
                     $error_status	= $this->$module->process_payment();
-                }
-
-
-                if ($module != 'stripe_payments'){
-                    $error_status	= $this->$module->process_payment();
-                }elseif ($module == 'paypal_express'){
-                    $error_status = $this->_paypal_process_payment();
-                }else{
-                    $error_status = $this->stripe_process_payment();
                 }
 
 				if($error_status !== false)
@@ -611,7 +601,7 @@ class Checkout extends Front_Controller {
 		
 		// save the order
 		$order_id = $this->go_cart->save_order();
-		
+
 		$data['order_id']			= $order_id;
 		$data['shipping']			= $this->go_cart->shipping_method();
 		$data['payment']			= $this->go_cart->payment_method();
@@ -622,7 +612,7 @@ class Checkout extends Front_Controller {
 		$order_downloads 			= $this->go_cart->get_order_downloads();
 		
 		$data['hide_menu']			= true;
-		
+        $this->updateOrderInfoOnPaymenetgeteway($order_id,$module);
 		// run the complete payment module method once order has been saved
 		if(!empty($payment))
 		{
@@ -723,6 +713,45 @@ class Checkout extends Front_Controller {
 		$this->view('order_placed', $data);
 	}
 
+    public function updateOrderInfoOnPaymenetgeteway($orderId,$module)
+    {
+        $settings	= $this->Settings_model->get_settings('stripe');
+        if ($module == 'stripe_payments'){
+            if($settings['mode'] == 'test')
+            {
+                $key	= $settings['test_secret_key'];
+            }
+            else
+            {
+                $key	= $settings['live_secret_key'];
+            }
+            $customer = $this->go_cart->customer();
+            $goSetting = $this->Settings_model->get_settings('gocart');
+            $pi = $this->session->userdata('payment_id');
+            $endpoint = 'https://api.stripe.com/v1/payment_intents/'.$pi;
+
+            $data = [
+                'description'=>$orderId.' - '.$customer['firstname'].' '.$customer['lastname'].' '.$customer['email']
+            ];
+
+            $headers = [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Bearer '.$key,
+                'Stripe-Version: 2023-10-16'
+            ];
+            $ch = curl_init();
+
+            curl_setopt($ch, CURLOPT_URL, $endpoint);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            $response = curl_exec($ch);
+            curl_close($ch);
+            return true;
+        }
+        return true;
+    }
     public function stripe_process_payment()
     {
         $process	= false;
