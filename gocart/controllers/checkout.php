@@ -578,8 +578,23 @@ class Checkout extends Front_Controller {
 			if($this->go_cart->total() > 0 && ! isset($payment['confirmed'])) {
 				//run the payment
                 $module = $payment['module'];
+
+                if (in_array($module,['stripe_payments','paypal_express'])){
+                    if ($module == 'stripe_payments'){
+                        $error_status = $this->stripe_process_payment();
+                    }
+                    if ($module == 'paypal_express'){
+                        $error_status = $this->_paypal_process_payment();
+                    }
+                }else{
+                    $error_status	= $this->$module->process_payment();
+                }
+
+
                 if ($module != 'stripe_payments'){
                     $error_status	= $this->$module->process_payment();
+                }elseif ($module == 'paypal_express'){
+                    $error_status = $this->_paypal_process_payment();
                 }else{
                     $error_status = $this->stripe_process_payment();
                 }
@@ -777,5 +792,69 @@ class Checkout extends Front_Controller {
             die();
         }
          return 'There was an error processing your payment through Stripe';
+    }
+    public function _paypal_process_payment()
+    {
+
+        $process = false;
+        $settings = $this->Settings_model->get_settings('paypal_express');
+        $clientId = '';
+        $clientSecret = '';
+        if ($settings['SANDBOX'] == '1') {
+            $clientId = $settings['username'];
+            $clientSecret = $settings['password'];
+        } else {
+            $clientId = $settings['username'];
+            $clientSecret = $settings['password'];
+        }
+        $customer = $this->go_cart->customer();
+        $total = $this->go_cart->total();
+        $goSetting = $this->Settings_model->get_settings('gocart');
+
+        $customerInfo = [
+            'first_name' => $customer['firstname'],
+            'last_name' => $customer['lastname'],
+            'email' => $customer['email'],
+        ];
+
+        $ch = curl_init();
+        $paypalUrl = 'https://api.sandbox.paypal.com/v2/checkout/orders';
+        $headers = [
+            'Content-Type: application/json',
+            'PayPal-Request-Id:'.time()
+        ];
+        $data = [
+            'intent' => 'CAPTURE',
+            'purchase_units' => [
+                [
+                    'amount' => [
+                        'currency_code' => $goSetting['currency_iso'],
+                        'value' => $total,
+                    ],
+                ],
+            ],
+            'application_context' => [
+                'return_url' => base_url('paypal/success'),
+                'cancel_url' => base_url('paypal/cancel'),
+            ],
+            'customer_info'=>$customerInfo
+        ];
+
+        curl_setopt($ch, CURLOPT_URL, $paypalUrl);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_USERPWD, $clientId . ':' . $clientSecret);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        $response = curl_exec($ch);
+        if ($response === false) {
+            die(curl_error($ch));
+        }
+        curl_close($ch);
+        $responseData = json_decode($response, true);
+        $approvalLink = $responseData['links'][1]['href'];
+        header('Location: ' . $approvalLink);
+        die();
+        return false;
     }
 }
