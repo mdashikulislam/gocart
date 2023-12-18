@@ -208,6 +208,7 @@ Class order_model extends CI_Model
 
     public function last_order_id()
     {
+        ini_set('memory_limit', '256M');
         return @$this->db->order_by('id','DESC')->get('orders')->row()->id ? : 0;
 	}
 	function save_order($data, $contents = false)
