@@ -208,7 +208,7 @@ Class order_model extends CI_Model
 
     public function last_order_id()
     {
-        return @$this->db->order_by('id','DESC')-get('orders')->row()->id ? : 0;
+        return @$this->db->order_by('id','DESC')->get('orders')->row()->id ? : 0;
 	}
 	function save_order($data, $contents = false)
 	{
